@@ -1,6 +1,6 @@
 package main
 
-import "github.com/imsarkie/multi-tcp-chat/server"
+import "github.com/imsarkie/multi-client-chat-TCP-based/server"
 
 func main() {
 	server.Run()
