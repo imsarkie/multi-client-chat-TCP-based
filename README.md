@@ -10,6 +10,6 @@ See I used claude just to clarify few things, since i'm a newbie. you can read t
 - [x] Clients identified by remote address (`ip:port`) in broadcast messages
 - [x] `QUIT` command to let a client disconnect cleanly
 - [x] Basic CLI client with concurrent read (goroutine) and write (stdin loop)
-- [ ] client uses unique name instead of remote addr (name is given by client)
+- [x] client uses unique name instead of remote addr (name is given by client)
 - [ ] private chat with a particular client (`/chat username` for private, `/chat broadcast` for public)
 - [ ] join/leave notifications — broadcast a message to everyone when a client connects or disconnects, instead of them just silently appearing/vanishing

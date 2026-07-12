@@ -8,6 +8,7 @@ import (
 
 type hub struct{
 	clients 	map[net.Conn]bool
+	uname 		map[string]net.Conn
 	broadcast 	chan string
 	register 	chan net.Conn
 	unregister 	chan net.Conn 		// net.Conn is an interface
@@ -15,27 +16,54 @@ type hub struct{
 
 func newHub() *hub{
 	return &hub{
-		clients: make(map[net.Conn]bool),
-		broadcast: make(chan string),
-		register: make(chan net.Conn),
-		unregister: make(chan net.Conn),
+		clients: 		make(map[net.Conn]bool),
+		uname: 			make(map[string]net.Conn),
+		broadcast: 		make(chan string),
+		register: 		make(chan net.Conn),
+		unregister: 	make(chan net.Conn),
+	}
+}
+
+func handleUname(h *hub,scanner *bufio.Scanner, conn net.Conn) (string, bool){
+	for{
+		fmt.Fprintln(conn, "Please enter your Username: ")
+		if !scanner.Scan(){
+			return "", false // client disconnected before answering
+		}
+		username := scanner.Text()
+		if _, exists := h.uname[username]; exists{
+			fmt.Fprintln(conn, "Username already exists, Try new one.")
+			continue
+		} else {
+			h.uname[username] = conn
+			fmt.Fprintln(conn, "Yay! username is available...")
+			return username, true
+		}
 	}
 }
 
 // No per-connection handler
 func handleConn(h *hub, conn net.Conn){
+	scanner := bufio.NewScanner(conn)
+
+	username, ok := handleUname(h, scanner, conn)
+	if !ok{
+		return
+	}
+
 	h.register<- conn
 	defer func ()  {
 		h.unregister<- conn
+		// here i need to delete the username if the connection is unregister
+		delete(h.uname, username)
 	}()
 
-	scanner := bufio.NewScanner(conn)
 	for scanner.Scan(){
 		msg := scanner.Text()
 		if msg == "QUIT"{
 			return
 		}
-		h.broadcast<- fmt.Sprintf("[%s]: %s", conn.RemoteAddr(), msg)
+		h.broadcast<- fmt.Sprintf("[%s]: %s", username, msg)
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Scanner error: ", err)
